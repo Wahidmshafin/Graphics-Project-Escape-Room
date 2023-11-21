@@ -150,6 +150,8 @@
     <None Include="fragmentShader.fs" />
     <None Include="fragmentShaderForPhongShading.fs" />
     <None Include="fragmentShaderForPhongShadingWithTexture.fs" />
+    <None Include="text.fs" />
+    <None Include="text.vs" />
     <None Include="vertexShader.vs" />
     <None Include="vertexShaderForPhongShading.vs" />
     <None Include="vertexShaderForPhongShadingWithTexture.vs" />

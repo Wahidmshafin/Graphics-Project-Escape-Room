@@ -58,5 +58,7 @@
     <None Include="fragmentShaderForPhongShadingWithTexture.fs" />
     <None Include="fragmentShaderForPhongShading.fs" />
     <None Include="vertexShaderForPhongShading.vs" />
+    <None Include="text.vs" />
+    <None Include="text.fs" />
   </ItemGroup>
 </Project>
