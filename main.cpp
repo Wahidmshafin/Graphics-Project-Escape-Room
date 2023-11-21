@@ -7,6 +7,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <irrKlang/irrKlang.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -21,8 +22,8 @@
 #include "cube.h"
 #include "stb_image.h"
 
-#include <iostream>
 
+using namespace irrklang;
 using namespace std;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -103,6 +104,7 @@ bool open_wardrobe = false;
 bool open_door = false;
 bool open_lad = false;
 float open_seseme = 0.0;
+float lf=0.0f;
 
 unsigned int ch_wood_tex;
 unsigned int almari_tex;
@@ -124,6 +126,7 @@ float lookAtX = 0.0, lookAtY = 0.0, lookAtZ = 0.0;
 glm::vec3 V = glm::vec3(0.0f, 1.0f, 0.0f);
 
 glm::vec3 lad = glm::vec3(5.07116, 0.656352, 10.6899);
+glm::vec3 stairP = glm::vec3(4.28553, 2.84192, 21);//4.49, 1.05, 17.76
 
 // lights
 // positions of the point lights
@@ -207,6 +210,7 @@ PointLight pointlight4(
     4       // light number
 );
 
+ISoundEngine* engine = createIrrKlangDevice();
 
 // light settings
 bool pointLightOn1 = true;
@@ -226,6 +230,8 @@ bool open_shokej = false;
 // timing
 float deltaTime = 0.0f;    // time between current frame and last frame
 float lastFrame = 0.0f;
+//Sound
+
 
 int main()
 {
@@ -266,6 +272,9 @@ int main()
         return -1;
     }
 
+    
+    
+
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
@@ -288,7 +297,7 @@ int main()
     string plywood = "plywood.jpg";
     string ch_wood = "ch_wood.jpg";
     string stair = "stair.jpg";
-    string mirror = "mirror.jpg";
+    string mirror = "mirror.png";
     string chair = "chair.jpg";
     string wall = "wall.jpg";
     string walls = "walls.jpg";
@@ -469,23 +478,27 @@ int main()
         DrasingTable(cube, lightingShaderWithTexture, translateMatrix);
         ////front
         cube.setTextureProperty(chair_tex, chair_tex, 32.0f);
-        translateMatrix = glm::translate(identityMatrix, glm::vec3(6.57002, -0.08, -4.6));
+        translateMatrix = glm::translate(identityMatrix, glm::vec3(6.57, -0.08, -3.78));
         rotateYMatrix = glm::rotate(identityMatrix, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         scaleMatrix = glm::scale(identityMatrix, glm::vec3(1.5f, 1.5f, 1.5f));
         Chair(cube, lightingShaderWithTexture, translateMatrix* rotateYMatrix* scaleMatrix);
 
-        translateMatrix = glm::translate(identityMatrix, glm::vec3(5.33, -0.08, -4.6));
+        translateMatrix = glm::translate(identityMatrix, glm::vec3(5.33, -0.08, -3.78));
         rotateYMatrix = glm::rotate(identityMatrix, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         scaleMatrix = glm::scale(identityMatrix, glm::vec3(1.5f, 1.5f, 1.5f));
         Chair(cube, lightingShaderWithTexture, translateMatrix* rotateYMatrix* scaleMatrix);
         //back
-        translateMatrix = glm::translate(identityMatrix, glm::vec3(6.57002, -0.08, -8.03));
+        translateMatrix = glm::translate(identityMatrix, glm::vec3(6.57002, -0.08, -7.3));
         scaleMatrix = glm::scale(identityMatrix, glm::vec3(1.5f, 1.5f, 1.5f));
         Chair(cube, lightingShaderWithTexture, translateMatrix* scaleMatrix);
-        translateMatrix = glm::translate(identityMatrix, glm::vec3(5.33, -0.08, -8.03));
+        translateMatrix = glm::translate(identityMatrix, glm::vec3(5.33, -0.08, -7.3));
         scaleMatrix = glm::scale(identityMatrix, glm::vec3(1.5f, 1.5f, 1.5f));
         Chair(cube, lightingShaderWithTexture, translateMatrix* scaleMatrix);
 
+        translateMatrix = glm::translate(identityMatrix, glm::vec3(-3.16+translate_X, 6.11+translate_Y, -13.61+translate_Z));
+        rotateYMatrix = glm::rotate(identityMatrix, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        scaleMatrix = glm::scale(identityMatrix, glm::vec3(1.5f, 1.5f, 1.5f));
+        Chair(cube, lightingShaderWithTexture, translateMatrix * rotateYMatrix * scaleMatrix);
         cube.setTextureProperty(walls_tex, walls_tex, 32.0f);
         //translateMatrix = glm::translate(identityMatrix, glm::vec3(-25.2967, -0.9099926, 0.6557));
         //Floor(cube, lightingShaderWithTexture, translateMatrix);//-4.22f, -0.989999f, -5.28003f
@@ -590,6 +603,12 @@ int main()
         translateMatrix = glm::translate(identityMatrix, glm::vec3(0.67-4.41, 5.03-4.2, 18+ 5.49));
         FWall(cube, lightingShaderWithTexture, scaleMatrix* translateMatrix);
 
+        //Stiar ceil
+        translateMatrix = glm::translate(identityMatrix, glm::vec3(-2.33, 9.02, 18.05));
+        scaleMatrix = glm::scale(identityMatrix, glm::vec3(1.78, 1, 1));
+        rotateXMatrix = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        SWall(cube, lightingShaderWithTexture, translateMatrix* rotateXMatrix* scaleMatrix);
+
         cube.setTextureProperty(stair_tex, stair_tex, 32);
         translateMatrix = glm::translate(identityMatrix, glm::vec3(3.12, 1.17, 20.92));
         scaleMatrix = glm::scale(identityMatrix, glm::vec3(1/2.32, 1/2.14, 1));
@@ -693,6 +712,12 @@ int main()
         rotateYMatrix = glm::rotate(identityMatrix, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         bed(cube, lightingShaderWithTexture, translateMatrix* rotateYMatrix* scaleMatrix);
 
+        translateMatrix = glm::translate(identityMatrix, glm::vec3(-13.86, 6.43, 3.97));
+        rotateYMatrix = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        //Bookself(cube, lightingShader, lightingShaderWithTexture, translateMatrix* rotateYMatrix* scaleMatrix);
+        DiningTable(cube, lightingShaderWithTexture, rotateYMatrix*translateMatrix);
+
+
         lightingShader.use();
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
@@ -723,7 +748,8 @@ int main()
         translateMatrix = glm::translate(identityMatrix, glm::vec3(2.36, 5.05, 19.69));
         scaleMatrix = glm::scale(identityMatrix, glm::vec3(6.0f, 3.0f, 2.5f));
         rotateYMatrix = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        Bookself(cube, lightingShader, lightingShaderWithTexture, translateMatrix* rotateYMatrix* scaleMatrix);
+        //Bookself(cube, lightingShader, lightingShaderWithTexture, translateMatrix* rotateYMatrix* scaleMatrix);
+        //DiningTable(cube, lightingShader, lightingShaderWithTexture, translateMatrix* rotateYMatrix* scaleMatrix);
         
         rotate_Now = (rotate_Now + rotateLevel);
         if (rotate_Now == 361.0)
@@ -778,6 +804,8 @@ int main()
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
+
+    engine->drop(); // delete engine
     return 0;
 }
 
@@ -789,27 +817,63 @@ void processInput(GLFWwindow* window)
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        float cf = static_cast<float>(glfwGetTime());
+        if (cf - lf >= 1.3f)
+        {
+            
+            engine->play2D("footstep.wav");
+            lf = cf;
+        }
         camera.ProcessKeyboard(FORWARD, deltaTime);
         glm::vec3 pos = camera.Position;
+        glm::vec3 frontt = camera.Front;
         if (abs(lad[0] - pos[0]) <= 0.2 && abs(lad[2] - pos[2]) <= 1.5)//0.2, 1.5
         {
             cout << "Ladder Up" << endl;
             camera.ProcessKeyboard(UP, deltaTime);
         }
+        if (stairP[2] - pos[2] <= 4.0 && stairP[2] - pos[2] >= 0.0 && frontt[2]>=0)
+        {
+            cout << "Stair Up" << endl;
+            camera.ProcessKeyboard(UP, deltaTime/2);
+        }
+        if (stairP[2] - pos[2] <= 4.0 && stairP[2] - pos[2] >= 0.0 && frontt[2] < 0)
+        {
+            cout << "Stair Down" << endl;
+            camera.ProcessKeyboard(DOWN, deltaTime / 2);
+        }
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        float cf = static_cast<float>(glfwGetTime());
+        if (cf - lf >= 1.3f)
+        {
+            engine->play2D("footstep.wav");
+            lf = cf;
+        }
         camera.ProcessKeyboard(BACKWARD, deltaTime);
         glm::vec3 pos = camera.Position;
         if (abs(lad[0] - pos[0]) <= 0.2 && abs(lad[2] - pos[2]) <= 1.5)//0.2, 1.5
         {
-            cout << "Ladder Up" << endl;
+            cout << "Ladder Down" << endl;
             camera.ProcessKeyboard(DOWN, deltaTime);
         }
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        float cf = static_cast<float>(glfwGetTime());
+        if (cf - lf >= 1.3f)
+        {
+            engine->play2D("footstep.wav");
+            lf = cf;
+        }
         camera.ProcessKeyboard(LEFT, deltaTime);
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        float cf = static_cast<float>(glfwGetTime());
+        if (cf - lf >= 1.3f)
+        {
+            engine->play2D("footstep.wav");
+            lf = cf;
+        }
         camera.ProcessKeyboard(RIGHT, deltaTime);
     }
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
@@ -903,28 +967,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         if (pointLightOn1)
         {
             pointlight1.turnOff();
+            pointlight2.turnOff();
+            pointlight3.turnOff();
+            pointlight4.turnOff();
             pointLightOn1 = !pointLightOn1;
         }
         else
         {
             pointlight1.turnOn();
+            pointlight2.turnOn();
+            pointlight3.turnOn();
+            pointlight4.turnOn();
             pointLightOn1 = !pointLightOn1;
         }
     }
     if (key == GLFW_KEY_3 && action == GLFW_PRESS)
-    {
-        if (pointLightOn2)
-        {
-            pointlight2.turnOff();
-            pointLightOn2 = !pointLightOn2;
-        }
-        else
-        {
-            pointlight2.turnOn();
-            pointLightOn2 = !pointLightOn2;
-        }
-    }
-    if (key == GLFW_KEY_4 && action == GLFW_PRESS)
     {
         if (spotLightOn)
         {
@@ -937,14 +994,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             spotLightOn = !spotLightOn;
         }
     }
-    if (key == GLFW_KEY_5 && action == GLFW_PRESS)
+    if (key == GLFW_KEY_4 && action == GLFW_PRESS)
     {
         if (ambientToggle)
         {
             if (pointLightOn1)
+            {
                 pointlight1.turnAmbientOff();
-            if (pointLightOn2)
                 pointlight2.turnAmbientOff();
+                pointlight3.turnAmbientOff();
+                pointlight4.turnAmbientOff();
+            }
+            if (spotLightOn)
             spotlight.turnAmbientOff();
             if (dirLightOn)
                 dirlight.turnAmbientOff();
@@ -953,9 +1014,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         else
         {
             if (pointLightOn1)
+            {
                 pointlight1.turnAmbientOn();
-            if (pointLightOn2)
                 pointlight2.turnAmbientOn();
+                pointlight3.turnAmbientOn();
+                pointlight4.turnAmbientOn();
+            }
             if (spotLightOn)
                 spotlight.turnAmbientOn();
             if (dirLightOn)
@@ -963,14 +1027,17 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             ambientToggle = !ambientToggle;
         }
     }
-    if (key == GLFW_KEY_6 && action == GLFW_PRESS)
+    if (key == GLFW_KEY_5 && action == GLFW_PRESS)
     {
         if (diffuseToggle)
         {
             if (pointLightOn1)
+            {
                 pointlight1.turnDiffuseOff();
-            if (pointLightOn2)
                 pointlight2.turnDiffuseOff();
+                pointlight3.turnDiffuseOff();
+                pointlight4.turnDiffuseOff();
+            }
             if (dirLightOn)
                 dirlight.turnDiffuseOff();
             if (spotLightOn)
@@ -980,9 +1047,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         else
         {
             if (pointLightOn1)
+            {
                 pointlight1.turnDiffuseOn();
-            if (pointLightOn2)
                 pointlight2.turnDiffuseOn();
+                pointlight3.turnDiffuseOn();
+                pointlight4.turnDiffuseOn();
+            }
             if (dirLightOn)
                 dirlight.turnDiffuseOn();
             if (spotLightOn)
@@ -990,7 +1060,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             diffuseToggle = !diffuseToggle;
         }
     }
-    if (key == GLFW_KEY_7 && action == GLFW_PRESS)
+    if (key == GLFW_KEY_6 && action == GLFW_PRESS)
     {
         if (specularToggle)
         {
@@ -1026,6 +1096,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         glm::vec3 shokejP = glm::vec3(-10.7603, 1.04047, 4.01365);
         glm::vec3 wardrobeP = glm::vec3(-10.6666, 0.910231, 10.53);
         glm::vec3 door = glm::vec3(5.33418, 3.16694, 20.9356);
+        
         
         if (cupboard[0] - pos[0] >= -6.0 && cupboard[0] - pos[0] <= 0 && abs(cupboard[2] - pos[2]) <= 2.0)
         {
@@ -1460,44 +1531,91 @@ void DiningTable(Cube& cube, Shader& lightingShader, glm::mat4 alTogether)
     //ourShader.setVec3("aColor", glm::vec3(1.0f, 1.0f, 1.0f));
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
+    //front leg right
     glm::mat4 translateMatrix1, rotateXMatrix1, rotateYMatrix1, rotateZMatrix1, scaleMatrix1, model1;
-    translateMatrix1 = glm::translate(identityMatrix, glm::vec3(-0.6f, 0.0f, -0.1f));
+    translateMatrix1 = glm::translate(identityMatrix, glm::vec3(-0.8f, 0.0f, -0.1f));
     rotateXMatrix1 = glm::rotate(identityMatrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     rotateYMatrix1 = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     rotateZMatrix1 = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    scaleMatrix1 = glm::scale(identityMatrix, glm::vec3(0.2f, 1.7f, 0.2f));
+    scaleMatrix1 = glm::scale(identityMatrix, glm::vec3(0.2f, 2.5f, 0.2f));
     //model = translateMatrix * rotateXMatrix * rotateYMatrix * rotateZMatrix * scaleMatrix;
     model1 = rotateXMatrix1 * translateMatrix1 * scaleMatrix1;
     cube.drawCubeWithTexture(lightingShader, alTogether * model1);
 
+    //front leg left
     glm::mat4 identityMatrix2 = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
     glm::mat4 translateMatrix2, rotateXMatrix2, rotateYMatrix2, rotateZMatrix2, scaleMatrix2, model2;
-    translateMatrix2 = glm::translate(identityMatrix, glm::vec3(0.8f, 0.0f, -0.1f));
+    translateMatrix2 = glm::translate(identityMatrix, glm::vec3(1.2f, 0.0f, -0.1f));
     rotateXMatrix2 = glm::rotate(identityMatrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     rotateYMatrix2 = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     rotateZMatrix2 = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    scaleMatrix2 = glm::scale(identityMatrix, glm::vec3(0.2f, 1.7f, 0.2f));
+    scaleMatrix2 = glm::scale(identityMatrix, glm::vec3(0.2f, 2.5f, 0.2f));
     model2 = rotateXMatrix2 * translateMatrix2 * scaleMatrix2;
     cube.drawCubeWithTexture(lightingShader, alTogether * model2);
 
     glm::mat4 translateMatrix3, rotateXMatrix3, rotateYMatrix3, rotateZMatrix3, scaleMatrix3, model3;
-    translateMatrix3 = glm::translate(identityMatrix, glm::vec3(0.8f, 0.0f, -1.49f));
+    translateMatrix3 = glm::translate(identityMatrix, glm::vec3(1.2f, 0.0f, -1.49f));
     rotateXMatrix3 = glm::rotate(identityMatrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     rotateYMatrix3 = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     rotateZMatrix3 = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    scaleMatrix3 = glm::scale(identityMatrix, glm::vec3(0.2f, 1.7f, 0.2f));
+    scaleMatrix3 = glm::scale(identityMatrix, glm::vec3(0.2f, 2.5f, 0.2f));
     //model = translateMatrix * rotateXMatrix * rotateYMatrix * rotateZMatrix * scaleMatrix;
     model3 = rotateXMatrix3 * translateMatrix3 * scaleMatrix3;
     cube.drawCubeWithTexture(lightingShader, alTogether * model3);
     // Modelling Transformation
     glm::mat4 translateMatrix4, rotateXMatrix4, rotateYMatrix4, rotateZMatrix4, scaleMatrix4, model4;
-    translateMatrix4 = glm::translate(identityMatrix, glm::vec3(-0.6f, 0.0f, -1.49f));
+    translateMatrix4 = glm::translate(identityMatrix, glm::vec3(-0.8f, 0.0f, -1.49f));
     rotateXMatrix4 = glm::rotate(identityMatrix, glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     rotateYMatrix4 = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     rotateZMatrix4 = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    scaleMatrix4 = glm::scale(identityMatrix, glm::vec3(0.2f, 1.7f, 0.2f));
+    scaleMatrix4 = glm::scale(identityMatrix, glm::vec3(0.2f, 2.5f, 0.2f));
     model4 = rotateXMatrix4 * translateMatrix4 * scaleMatrix4;
     cube.drawCubeWithTexture(lightingShader, alTogether * model4);
+
+
+    // base
+    //glm::mat4 identityMatrix = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    //glm::mat4 translateMatrix, rotateXMatrix, rotateYMatrix, rotateZMatrix, scaleMatrix, model;
+    translateMatrix = glm::translate(identityMatrix, glm::vec3(-0.2, 0.6f, 1.0f));
+    scaleMatrix = glm::scale(identityMatrix, glm::vec3(5.4, 0.2f, 1.0f));
+    model = scaleMatrix*translateMatrix;
+    //drawCube(cubeVAO, lightingShader, alTogether * model,);
+    //cube.setMaterialisticProperty(glm::vec3(0.462f, 0.258f, 0.145f));
+    //cube.setTextureProperty(black_tex, black_tex, 32.0f);
+    //cube.drawCubeWithTexture(lightingShader, alTogether * model);
+
+    //translateMatrix = glm::translate(identityMatrix, glm::vec3(0.5, 1.3, 1.0f));
+    //scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.7f, 0.1f, 0.5f));
+    //model = translateMatrix * scaleMatrix;
+    cube.drawCubeWithTexture(lightingShader, alTogether * model);
+
+    // mid 1
+    //translateMatrix = glm::translate(identityMatrix, glm::vec3(0.55, 1.0f, 1.0f));
+    translateMatrix = glm::translate(identityMatrix, glm::vec3(-0.2, 3.4f, 1.0f));
+    //scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.5f, 0.1f, 0.5f));
+    model = scaleMatrix * translateMatrix;
+    //model = translateMatrix * scaleMatrix;
+    cube.drawCubeWithTexture(lightingShader, alTogether * model);
+
+    // mid 2
+    translateMatrix = glm::translate(identityMatrix, glm::vec3(-0.2, 6.2f, 1.0f));
+    //scaleMatrix = glm::scale(identityMatrix, glm::vec3(.5, .1, 0.5));
+    //model = translateMatrix * scaleMatrix;
+    model = scaleMatrix * translateMatrix;
+    cube.drawCubeWithTexture(lightingShader, alTogether * model);
+
+    // left
+    translateMatrix = glm::translate(identityMatrix, glm::vec3(-1.05, 0, 1));
+    scaleMatrix = glm::scale(identityMatrix, glm::vec3(.2, 2.5, 1));
+    model = translateMatrix * scaleMatrix;
+    cube.drawCubeWithTexture(lightingShader, alTogether * model);
+
+    //right
+    translateMatrix = glm::translate(identityMatrix, glm::vec3(1.5, 0, 1));
+    scaleMatrix = glm::scale(identityMatrix, glm::vec3(.2, 2.5, 1));
+    model = translateMatrix * scaleMatrix;
+    cube.drawCubeWithTexture(lightingShader, alTogether * model);
+
 }
 
 void Tool(Cube& cube, Shader& lightingShader, glm::mat4 alTogether)
