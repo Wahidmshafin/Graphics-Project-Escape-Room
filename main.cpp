@@ -79,8 +79,8 @@ glm::mat4 transform(float tr_x, float tr_y, float tr_z, float rot_x, float rot_y
 
 
 // settings
-const unsigned int SCR_WIDTH = 1080;
-const unsigned int SCR_HEIGHT = 720;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 
 // modelling transform
 float rotateAngle_X = 0.0;
@@ -112,7 +112,8 @@ bool over = false;
 float open_seseme = 0.0;
 float lf=0.0f;
 float st = 0.0f;
-float limit = 100.0f;
+float limit = 15.0f;
+float win_time = 0.0;
 int ra;
 
 unsigned int ch_wood_tex;
@@ -136,7 +137,7 @@ unsigned int h_tex;
 unsigned int i_tex;
 unsigned int j_tex;
 
-Camera camera(glm::vec3(0.0f, 3.1f, 13.0f));
+Camera camera(glm::vec3(0.0f, 1.0f, 13.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -153,8 +154,18 @@ glm::vec3 KeyPositions[] = {
     glm::vec3(0, 0.53, 4.04),//-37.3297, -1.78, 16.3203
     glm::vec3(16.3903, 24.1405, 33.5404),
     glm::vec3(-37.3297, -1.78, 16.3203),
+    glm::vec3(-37.6197, 9.37012, 46.6082)
 };
 
+glm::vec3 KeyCameraPositions[] = {
+    glm::vec3(0, 0.53, 4.04),//-37.3297, -1.78, 16.3203
+    glm::vec3(16.3903, 24.1405, 33.5404),
+    glm::vec3(-37.3297, -1.78, 16.3203),
+    glm::vec3(-10.1956 ,3.39785 ,13.6654)
+};
+
+
+// 
 
 // lights
 // positions of the point lights
@@ -490,12 +501,13 @@ int main()
 
     Cube circle = Cube(glm::vec3(0, 1, 0));
     circle.initiate(v_circle);
-    ra = rand() % 3;
-    ra = 0;
+    //ra = rand() % 3;
+    ra = 3;
     //Sphere sphere = Sphere();
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    
 
     // render loop
     // -----------
@@ -506,12 +518,37 @@ int main()
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+        
         if (ceil(lastFrame) == limit && !over)
         {
             over = true;
+            pointLightOn1 = false;
+            dirLightOn = false;
+            spotLightOn = false;
+            pointlight1.turnOff();
+            pointlight2.turnOff();
+            pointlight3.turnOff();
+            pointlight4.turnOff();
+            dirlight.turnOff();
+            spotlight.turnOff();
             engine->play2D("over.wav");
+
         }
-        if (ceil(lastFrame) == limit+12.0 && over)
+        if (ceil(lastFrame) == limit + 12.0 && over)
+        {
+            cout << "**************" << endl;
+            cout << "*   -----    *" << endl;
+            cout << "*  You Lose  *" << endl;
+            cout << "*   -----    *" << endl;
+            cout << "**************" << endl;
+            break;
+
+        }
+        if(found_key && win_time==0.0)
+        {
+            win_time = ceil(lastFrame);
+        }
+        if (found_key && ceil(lastFrame) - win_time >= 5.0f)
         {
             break;
         }
@@ -529,7 +566,6 @@ int main()
         lightingShaderWithTexture.use();
         lightingShaderWithTexture.setVec3("viewPos", camera.Position);
         lad = glm::vec3(5.07116+lad_x, 0.656352+lad_y, 10.6899+lad_z);
-
         // pass projection matrix to shader (note that in this case it could change every frame)
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         lightingShaderWithTexture.setMat4("projection", projection);
@@ -842,6 +878,7 @@ int main()
         //    translateMatrix = glm::translate(identityMatrix, glm::vec3(-0.19, -0.15, 8.77011));
         //    cube.drawCubeWithTexture(lightingShaderWithTexture, scaleMatrix * translateMatrix);
         ////}
+        
 
 
         lightingShader.use();
@@ -920,6 +957,7 @@ int main()
 
 
         translateMatrix = glm::translate(identityMatrix, KeyPositions[ra]);
+        //translateMatrix = glm::translate(identityMatrix, glm::vec3(translate_X- 37.6197,translate_Y+9.37012, translate_Z+ 46.6082));
         scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.3, 0.3, 0.3));//0.5,0.5,0.5
         Key(cube, wheel, lightingShader, scaleMatrix * translateMatrix);
 
@@ -956,8 +994,8 @@ int main()
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
 
-    cout << translate_X << ", " << translate_Y << ", " <<translate_Z << endl;
-    cout << scale_X << ", " << scale_Y << ", " << scale_Z << endl;
+    /*cout << translate_X << ", " << translate_Y << ", " <<translate_Z << endl;
+    cout << scale_X << ", " << scale_Y << ", " << scale_Z << endl;*/
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
@@ -984,6 +1022,8 @@ void processInput(GLFWwindow* window)
         camera.ProcessKeyboard(FORWARD, deltaTime);
         glm::vec3 pos = camera.Position;
         glm::vec3 frontt = camera.Front;
+        if(pos[1]<=1.0)
+            camera.ProcessKeyboard(UP, deltaTime);
         if (abs(lad[0] - pos[0]) <= 0.2 && abs(lad[2] - pos[2]) <= 1.5)//0.2, 1.5
         {
             //cout << "Ladder Up" << endl;
@@ -1029,7 +1069,7 @@ void processInput(GLFWwindow* window)
         glm::vec3 pos = camera.Position;
         if (abs(lad[0] - pos[0]) <= 0.2 && abs(lad[2] - pos[2]) <= 1.5)//0.2, 1.5
         {
-            cout << "Ladder Down" << endl;
+            //cout << "Ladder Down" << endl;
             camera.ProcessKeyboard(DOWN, deltaTime);
         }
     }
@@ -1060,15 +1100,15 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
         camera.ProcessKeyboard(P_UP, deltaTime);
     }
-    /*if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
         camera.ProcessKeyboard(P_DOWN, deltaTime);
-    }*/
+    }
     if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
         camera.ProcessKeyboard(Y_LEFT, deltaTime);
     }
-    /*if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
         camera.ProcessKeyboard(Y_RIGHT, deltaTime);
-    }*/
+    }
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
         camera.ProcessKeyboard(R_LEFT, deltaTime);
     }
@@ -1111,12 +1151,12 @@ void processInput(GLFWwindow* window)
         if (open_lad)
             lad_z -= 0.05;
     }
-    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) scale_X += 0.01;
+    //if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) scale_X += 0.01;
     if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) scale_X -= 0.01;
     if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) scale_Y += 0.01;
     if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) scale_Y -= 0.01;
     if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) scale_Z += 0.01;
-    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) scale_Z -= 0.01;
+    //if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) scale_Z -= 0.01;
 
 
 
@@ -1267,10 +1307,20 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     {
         glm::vec3 pos = camera.Position;
         glm::vec3 door = glm::vec3(-0.71503, 1.43272, 15.4382);
-        if (abs(KeyPositions[ra][0] - pos[0]) <= 3.0 && abs(KeyPositions[ra][2] - pos[2])<=3.0)
+        if (abs(KeyCameraPositions[ra][0] - pos[0]) <= 3.0 && abs(KeyCameraPositions[ra][2] - pos[2])<=3.0)
         {
+            cout << "**************" << endl;
+            cout << "*   ----     *" << endl;
+            cout << "* YOU WIN!!  *" << endl;
+            cout << "*   ----     *" << endl;
+            cout << "**************" << endl;
             engine->play2D("win.wav");
             found_key = true;
+        }
+        else
+        {
+            //camera.PrintInfo();
+            //cout << KeyPositions[ra][0] << " " << KeyPositions[ra][2] << endl;
         }
         if (abs(door[2] - pos[2]) <= 3.0 && found_key)
         {
@@ -1291,7 +1341,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         
         if (cupboard[0] - pos[0] >= -6.0 && cupboard[0] - pos[0] <= 0 && abs(cupboard[2] - pos[2]) <= 2.0)
         {
-            cout << "cupboard" << endl;
+            //cout << "cupboard" << endl;
             open_cupboard = !open_cupboard;
 
         }
@@ -1303,23 +1353,23 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         }*/
         if (shokejP[0] - pos[0] >= -6.0 && shokejP[0] - pos[0] <= 0 && abs(shokejP[2] - pos[2]) <= 2.0)
         {
-            cout << "shokej" << endl;
+            //cout << "shokej" << endl;
             open_shokez = !open_shokez;
         }
         if (wardrobeP[0] - pos[0] >= -6.0 && wardrobeP[0] - pos[0] <= 0 && abs(wardrobeP[2] - pos[2]) <= 2.0)
         {
-            cout << "wardrobe" << endl;
+            //cout << "wardrobe" << endl;
             open_wardrobe = !open_wardrobe;
         }
         if (abs(lad[0] - pos[0]) <= 4.0 && abs(lad[2] - pos[2]) <= 4.0)//0.2, 1.5
         {
             //cout << "Ladder" << endl;
             open_lad = !open_lad;
-            camera.PrintInfo();
+            //camera.PrintInfo();
         }
         else
         {
-            camera.PrintInfo();
+            //camera.PrintInfo();
         }
 
     }
@@ -1332,7 +1382,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         glm::vec3 pos = camera.Position;
         if (abs(lad[0] - pos[0]) <= 4.0 && abs(lad[2] - pos[2]) <= 4.0)//0.2, 1.5
         {
-            cout << "Ladder" << endl;
+            //cout << "Ladder" << endl;
             open_lad = !open_lad;
             //camera.PrintInfo();
         }
@@ -1698,7 +1748,7 @@ void Key(Cube& cube, Cube& cube2, Shader& lightingShader, glm::mat4 alTogether)
     scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.0f, 0.0f, 0.0f));
     rotateYMatrix = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     model = rotateYMatrix * scaleMatrix * translateMatrix;
-    cube.setMaterialisticProperty(glm::vec3(0.53f, 0.81f, 0.92f));
+    cube.setMaterialisticProperty(glm::vec3(0.933, 0.914, 0.588));//0.8313f, 0.686f, 0.215f
     cube.drawCubeWithMaterialisticProperty(lightingShader, alTogether * model);
     translateMatrix = glm::translate(identityMatrix, glm::vec3(6.85569, -0.0340001, 0.424998));//,
     if (!found_key)
@@ -1723,7 +1773,7 @@ void Key(Cube& cube, Cube& cube2, Shader& lightingShader, glm::mat4 alTogether)
     else
         scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.0f, 0.0f, 0.0f));
     model = scaleMatrix * translateMatrix;
-    cube2.setMaterialisticProperty(glm::vec3(0.53f, 0.81f, 0.92f));
+    cube2.setMaterialisticProperty(glm::vec3(0.8313f, 0.686f, 0.215f));
     cube2.drawObjectFilled(lightingShader, alTogether * model);
 }
 
@@ -2130,28 +2180,28 @@ void Fan(Cube& cube, Cube& cube2, Shader& lightingShader, glm::mat4 alTogether)
     translateMatrix = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, 0));
     scaleMatrix = glm::scale(identityMatrix, glm::vec3(3.0f, 0.2f, 0.5f));
     model = scaleMatrix * translateMatrix;
-    cube.setMaterialisticProperty(glm::vec3(0.0f, 0.0f, 1.0f));
+    cube.setMaterialisticProperty(glm::vec3(0, 1, 0.471));
     cube.drawCubeWithMaterialisticProperty(lightingShader, alTogether * model);
 
     translateMatrix = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, 0));//,translate_X, translate_Y, translate_Z
     scaleMatrix = glm::scale(identityMatrix, glm::vec3(3.0f, 0.2f, 0.5f));
     rotateYMatrix = glm::rotate(identityMatrix, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     model = rotateYMatrix * scaleMatrix * translateMatrix;
-    cube.setMaterialisticProperty(glm::vec3(0.0f, 0.0f, 1.0f));
+    cube.setMaterialisticProperty(glm::vec3(0, 1, 0.471));
     cube.drawCubeWithMaterialisticProperty(lightingShader, alTogether * model);
 
     translateMatrix = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, 0.0f));//,
     scaleMatrix = glm::scale(identityMatrix, glm::vec3(3.0f, 0.2f, 0.5f));
     rotateYMatrix = glm::rotate(identityMatrix, glm::radians(225.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     model = rotateYMatrix * scaleMatrix * translateMatrix;
-    cube.setMaterialisticProperty(glm::vec3(0.0f, 0.0f, 1.0f));
+    cube.setMaterialisticProperty(glm::vec3(0, 1, 0.471));
     cube.drawCubeWithMaterialisticProperty(lightingShader, alTogether * model);
     //circle
     translateMatrix = glm::translate(identityMatrix, glm::vec3(0, -1.60902, 0));
     scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.5f, 1.0f, 0.5f));
     model = scaleMatrix * translateMatrix;
     lightingShader.setMat4("model", alTogether * model);
-    cube2.setMaterialisticProperty(glm::vec3(0.0f, 0.0f, 1.0f));
+    cube2.setMaterialisticProperty(glm::vec3(0, 1, 0.471));
     cube2.drawObjectFilled(lightingShader, alTogether * model);
     translateMatrix = glm::translate(identityMatrix, glm::vec3(0, -1.60902 + 0.05, 0));
     scaleMatrix = glm::scale(identityMatrix, glm::vec3(0.1f, 6.0f, 0.1f));
